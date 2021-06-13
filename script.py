@@ -74,15 +74,9 @@ gesamt_df = df.append(kommende_spiele).reset_index()
 gesamt_df.drop("index", axis=1, inplace=True)
 
 encoded_colums = pd.DataFrame(enc.fit_transform(gesamt_df[obj_cols]))
-encoded_colums
-
 numerical_data = gesamt_df.drop(obj_cols, axis=1)
-
 numerical_data = numerical_data.reset_index().drop("index", axis=1)
 encoded_columns = encoded_columns.reset_index().drop("index", axis=1)
-
-numerical_data
-encoded_colums
 
 # One-hot encoding removed index; put it back
 prediction_df = pd.merge(numerical_data, encoded_colums, left_index=True, right_index=True)
@@ -98,12 +92,34 @@ y_train = y_data.head(1247)
 clf = RandomForestClassifier(n_estimators=250, random_state=0)
 clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
+result = pd.merge(kommende_spiele, pd.Series(y_pred, name="pred"), left_index=True, right_index=True)
 
 mapper = {1: "HEIMSIEG", -1: "HEIMNIEDERLAGE", 0: "UNENTSCHIEDEN"}
 
 for index, row in kommende_spiele.iterrows():
     print(f"Vorhersage für {row['home_team']} gegen {row['away_team']}: {mapper.get(y_pred[index])}")
 
-X_test.shape
-X_test.sum().sum()
+
+def lists_to_df(home_teams, away_teams):
+    kommende_spiele_dict = {'home_team' : home_teams, 'away_team' : away_teams }
+    kommende_spiele = pd.DataFrame(data=kommende_spiele_dict)
+    return kommende_spiele
+    
+
+gruppe_a_home = ["Turkey", "Wales", "Turkey", "Italty", "Italy", "Switzerland"]    
+gruppe_a_away = ["Italy", "Switzerland", "Wales", "Switzerland", "Wales", "Turkey"]
+
+lists_to_df(gruppe_a_home, gruppe_a_away)
+
+
+teams = {"Turkey": 0, "Wales": 0, "Italy": 0, "Switzerland": 0}
+
+for index, row in result.iterrows():
+    if row["pred"] == 1:
+        teams[row["home_team"]] += 3
+    elif row["pred"] == -1:
+        teams[row["away_team"]] += 3
+    else:
+        teams[row["away_team"]] += 1
+        teams[row["away_team"]] += 1
 
